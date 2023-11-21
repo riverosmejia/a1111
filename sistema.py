@@ -186,17 +186,24 @@ class Sistema:
 
     def crear_grupo(self):
         if self.usuario_actual is not None:
-            if len(self.usuario_actual.Grupos) >= 3:
-                print("Ya has alcanzado el límite de grupos que puedes crear.")
-                return
-
             nombre_grupo = input("Ingrese el nombre del nuevo grupo: ")
+
+            # Verificar que el grupo no exista
             if nombre_grupo not in self.lista_grupos:
+                saldo_inicial = int(input("Ingrese el saldo inicial del grupo: "))
+                
+                # Agregar el nuevo grupo con su saldo al archivo de grupos
+                with open(self.archivo_grupos, "a") as archivo:
+                    archivo.write(f"{nombre_grupo}:{saldo_inicial}\n")
+
+                # Actualizar la lista de grupos en memoria
                 self.lista_grupos.append(nombre_grupo)
+
+                # Agregar el nuevo grupo a la lista de grupos del usuario actual
                 self.usuario_actual.Grupos.append(nombre_grupo)
-                print(f"Se ha creado y te has unido al grupo {nombre_grupo}.")
+
+                print(f"Se ha creado y te has unido al grupo {nombre_grupo} con un saldo inicial de {saldo_inicial}.")
                 self.guardar_lista_usuarios()
-                self.guardar_grupos_en_archivo()
             else:
                 print("Ya existe un grupo con ese nombre.")
         else:
