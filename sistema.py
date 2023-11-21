@@ -5,6 +5,7 @@ class Sistema:
 
     def __init__(self):
         self.lista_usuarios = []
+        self.lista_grupos_obj = []
         self.imprimir = Imprimir()
         self.archivo_usuarios = "usuarios.txt"
         self.archivo_grupos = "grupos.txt"
@@ -12,14 +13,54 @@ class Sistema:
         self.leer_usuarios_desde_archivo(self.archivo_usuarios)
         self.leer_grupos_desde_archivo(self.archivo_grupos)
 
+    def obtener_grupo_por_nombre(self, lista_grupos, nombre_grupo):
+        for grupo in lista_grupos:
+            if grupo == nombre_grupo:
+                return grupo
+
+        return None
+
+    def retirarse_de_grupo(self, usuario_actual, lista_grupos, nombre_grupo):
+        grupo_obj = self.obtener_grupo_por_nombre(lista_grupos, nombre_grupo)
+
+        if grupo_obj is not None:
+            if nombre_grupo in usuario_actual.Grupos:
+                usuario_actual.Grupos.remove(nombre_grupo)
+                print(f"Te has retirado del grupo: {nombre_grupo}.")
+                self.guardar_lista_usuarios()
+            else:
+                print("No puedes retirarte de un grupo al que no perteneces.")
+        else:
+            print("El grupo especificado no existe.")
+
+    def guardar_grupos_en_archivo(self):
+
+        with open(self.archivo_grupos, "w") as archivo:
+            for grupo in self.lista_grupos:
+                archivo.write(f"{grupo.nombre}\n")
+
+    def leer_grupos_desde_archivo(self, nombre_archivo):
+       
+        try:
+            with open(nombre_archivo, "r") as archivo:
+                lineas = archivo.readlines()
+                self.lista_grupos_obj = [Grupo(linea.strip()) for linea in lineas]
+        except FileNotFoundError:
+            print(f"El archivo {nombre_archivo} no existe.")
+        except Exception as e:
+            print(f"Error al leer la lista de grupos desde el archivo: {e}")
+
     def agregar_usuario(self, usuario):
+
         self.lista_usuarios.append(usuario)
 
     def guardar_en_archivo(self, usuario, nombre_archivo):
+
         with open(nombre_archivo, "a") as archivo:
             archivo.write(usuario.obtener_info() + "\n")
 
     def guardar_lista_usuarios(self):
+
         print("Guardando lista de usuarios...")
         with open(self.archivo_usuarios, "r") as archivo:
             lineas = archivo.readlines()
@@ -37,9 +78,8 @@ class Sistema:
 
         print("Lista de usuarios guardada correctamente.")
 
-
-
     def leer_usuarios_desde_archivo(self, nombre_archivo):
+
         usuarios = []
 
         try:
@@ -79,7 +119,6 @@ class Sistema:
 
         return usuarios
 
-
     def leer_grupos_desde_archivo(self, nombre_archivo):
         try:
             with open(nombre_archivo, "r") as archivo:
@@ -111,43 +150,37 @@ class Sistema:
         print("Inicio de sesión fallido. Verifique sus credenciales.")
         print('<<------------------------>>')
 
-
     def cerrar_sesion(self):
         self.usuario_actual = None
         print("Sesión cerrada.")
 
     def unirse_a_grupo(self):
-
         if self.usuario_actual is not None:
-
+            # Verificar si el usuario ya pertenece al máximo de grupos permitidos
             if len(self.usuario_actual.Grupos) >= 3:
-
-                print("Ya te has unido al máximo de grupos permitidos.")
+                print("Ya perteneces al máximo de grupos permitidos (3).")
                 return
 
             nombre_grupo = input("Ingrese el nombre del grupo al que desea unirse: ")
 
-            if nombre_grupo in self.lista_grupos and nombre_grupo not in self.usuario_actual.Grupos:
-
-                print(nombre_grupo)
-
-                print(self.usuario_actual.Grupos)
-
-                print(self.usuario_actual)
-
-                self.usuario_actual.Grupos.append(nombre_grupo)
-
-                print(self.usuario_actual.Grupos)
-
-                print(self.usuario_actual)
-
-                print(f"Te has unido al grupo: {nombre_grupo}.")
-
-                print(self.usuario_actual)
-
-                self.guardar_lista_usuarios()
+            # Verificar si el grupo existe en la lista de grupos
+            grupo_obj = self.obtener_grupo_por_nombre(nombre_grupo)
+            if grupo_obj is not None:
+                # Verificar si el grupo ya tiene el máximo de usuarios permitidos (3)
+                if len(grupo_obj.usuarios) >= 3:
+                    print(f"El grupo {nombre_grupo} ya tiene el máximo de usuarios permitidos (3).")
+                else:
+                    # Verificar si el usuario ya pertenece al grupo
+                    if nombre_grupo not in self.usuario_actual.Grupos:
+                        grupo_obj.usuarios.append(self.usuario_actual)
+                        self.usuario_actual.Grupos.append(nombre_grupo)
+                        print(f"Te has unido al grupo: {nombre_grupo}.")
+                        self.guardar_lista_usuarios()
+                        self.guardar_grupos_en_archivo()
+                    else:
+                        print(f"Ya perteneces al grupo {nombre_grupo}.")
             else:
-                print("El grupo ingresado no existe.")
+                print(f"El grupo {nombre_grupo} no existe.")
         else:
             print("Debes iniciar sesión para unirte a un grupo.")
 
@@ -168,7 +201,6 @@ class Sistema:
                 print("Ya existe un grupo con ese nombre.")
         else:
             print("Debes iniciar sesión para crear un grupo.")
-
 
     def arrancamos(self):
 
@@ -222,3 +254,13 @@ class Sistema:
             if resp==5:
 
                 self.crear_grupo()
+
+            if resp == 6:
+
+                
+                # Opción para retirarse de un grupo
+                if self.usuario_actual is not None and self.usuario_actual.Grupos:
+                    nombre_grupo = input("Ingrese el nombre del grupo del que desea retirarse: ")
+                    self.retirarse_de_grupo(self.usuario_actual, self.lista_grupos, nombre_grupo)
+                else:
+                    print("No puedes retirarte de un grupo si no estás en ninguno.")

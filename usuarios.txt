@@ -1,1 +1,1 @@
-Nombre: 1 Contraseña: 212121 Monto: 111 Grupos: grupo1, grupo2, grupo3
+Nombre: 1 Contraseña: 212121 Monto: 111 Grupos: grupo1, grupo3
